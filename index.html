@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="富士登山">
+<meta name="theme-color" content="#0d2440">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>富士登山サポート｜富士宮ルート</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --text:#1a1a1a; --sub:#5a6270;
+    --accent:#1565c0; --accent2:#e3f0fd; --border:#d8dde5;
+    --ok:#2e7d32; --okbg:#e6f4e7; --warn:#c62828; --warnbg:#fdecea;
+    --cau:#e65100; --caubg:#fff3e0; --btn:#1565c0; --btntext:#fff;
+  }
+  [data-theme="dark"]{
+    --bg:#000000; --card:#161616; --text:#f5f5f5; --sub:#b8b8b8;
+    --accent:#7db8ff; --accent2:#0d2440; --border:#3a3a3a;
+    --ok:#7ed57e; --okbg:#0f2c10; --warn:#ff7a7a; --warnbg:#3a0d0d;
+    --cau:#ffb066; --caubg:#3a2200; --btn:#2f6fd0; --btntext:#fff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{font-size:17px;}
+  html[data-theme="dark"]{font-size:18px;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  }
+  header{
+    position:sticky; top:0; z-index:20; background:var(--card);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:8px; padding:10px 12px;
+    padding-top:calc(10px + env(safe-area-inset-top));
+  }
+  header h1{font-size:1.05rem; margin:0; flex:1; line-height:1.2;}
+  header h1 small{display:block; font-size:.7rem; color:var(--sub); font-weight:normal;}
+  #clock{font-size:1.5rem; font-weight:700; font-variant-numeric:tabular-nums;}
+  #themeBtn{
+    font-size:1.3rem; background:var(--accent2); border:1px solid var(--border);
+    border-radius:12px; width:52px; height:48px; cursor:pointer; color:var(--text);
+  }
+  nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    display:flex; background:var(--card); border-top:1px solid var(--border);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{
+    flex:1; border:none; background:none; color:var(--sub);
+    font-size:.68rem; padding:8px 0 10px; cursor:pointer; line-height:1.25;
+  }
+  nav button .ic{display:block; font-size:1.35rem;}
+  nav button.on{color:var(--accent); font-weight:700;}
+  main{padding:12px; max-width:640px; margin:0 auto;}
+  section.tab{display:none;}
+  section.tab.on{display:block;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:14px; margin-bottom:12px;
+  }
+  h2{font-size:1.05rem; margin:4px 0 10px;}
+  h3{font-size:.95rem; margin:14px 0 8px; color:var(--accent);}
+  .sub{color:var(--sub); font-size:.8rem;}
+  .banner{
+    border-radius:12px; padding:12px 14px; margin-bottom:10px;
+    font-weight:700; display:flex; align-items:center; gap:10px; font-size:.95rem;
+  }
+  .banner.warn{background:var(--warnbg); color:var(--warn); border:2px solid var(--warn);}
+  .banner.cau{background:var(--caubg); color:var(--cau); border:2px solid var(--cau);}
+  .banner.ok{background:var(--okbg); color:var(--ok); border:1px solid var(--ok);}
+  .banner button{
+    margin-left:auto; border:none; border-radius:10px; padding:10px 14px;
+    background:var(--card); color:inherit; font-weight:700; font-size:.9rem;
+    border:1px solid currentColor; cursor:pointer; flex-shrink:0;
+  }
+  /* --- checklist --- */
+  .stagebar{display:flex; gap:8px; margin-bottom:12px;}
+  .stagebar button{
+    flex:1; padding:12px 4px; border-radius:12px; border:2px solid var(--border);
+    background:var(--card); color:var(--text); font-size:.95rem; font-weight:700; cursor:pointer;
+  }
+  .stagebar button.on{border-color:var(--accent); background:var(--accent2); color:var(--accent);}
+  .prog{height:10px; border-radius:6px; background:var(--border); overflow:hidden; margin:6px 0 2px;}
+  .prog i{display:block; height:100%; background:var(--ok); width:0; transition:width .3s;}
+  ul.check{list-style:none; margin:0; padding:0;}
+  ul.check li{
+    display:flex; align-items:center; gap:10px; padding:11px 4px;
+    border-bottom:1px solid var(--border); cursor:pointer; min-height:52px;
+  }
+  ul.check li:last-child{border-bottom:none;}
+  .cb{
+    width:30px; height:30px; border-radius:9px; border:2px solid var(--sub);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:1.15rem; color:#fff;
+  }
+  li.done .cb{background:var(--ok); border-color:var(--ok);}
+  li.done .lab{text-decoration:line-through; color:var(--sub);}
+  .lab{flex:1; font-size:.98rem; line-height:1.35;}
+  .lab small{display:block; color:var(--sub); font-size:.75rem;}
+  /* --- tracker --- */
+  .cp{
+    display:flex; align-items:flex-start; gap:10px; padding:12px 4px;
+    border-bottom:1px solid var(--border);
+  }
+  .cp:last-child{border-bottom:none;}
+  .cpbtn{
+    width:56px; height:56px; border-radius:16px; border:2px solid var(--sub);
+    background:var(--card); font-size:1.5rem; flex-shrink:0; cursor:pointer; color:var(--sub);
+  }
+  .cp.done .cpbtn{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .cp.next .cpbtn{border-color:var(--accent); color:var(--accent); border-style:dashed;}
+  .cpmain{flex:1; min-width:0;}
+  .cpname{font-size:1.08rem; font-weight:700;}
+  .cpname small{color:var(--sub); font-weight:normal; font-size:.75rem; margin-left:6px;}
+  .cptime{font-size:1rem; color:var(--ok); font-weight:700; margin-top:2px;}
+  .cptime .edit{
+    border:1px solid var(--border); background:none; color:var(--sub);
+    border-radius:8px; font-size:.75rem; padding:4px 8px; margin-left:8px; cursor:pointer;
+  }
+  .cpinfo{font-size:.82rem; color:var(--sub); margin-top:2px;}
+  .memo{
+    width:100%; margin-top:8px; border:1px solid var(--border); border-radius:10px;
+    background:var(--bg); color:var(--text); padding:9px 10px; font-size:.95rem;
+  }
+  .bigstat{
+    display:flex; gap:10px; text-align:center;
+  }
+  .bigstat div{flex:1; background:var(--accent2); border-radius:12px; padding:10px 4px;}
+  .bigstat b{display:block; font-size:1.35rem; font-variant-numeric:tabular-nums;}
+  .bigstat span{font-size:.72rem; color:var(--sub);}
+  .toolbtn{
+    width:100%; padding:14px; border-radius:12px; border:none; background:var(--btn);
+    color:var(--btntext); font-size:1rem; font-weight:700; cursor:pointer; margin-top:8px;
+  }
+  .toolbtn.ghost{background:var(--card); color:var(--warn); border:1.5px solid var(--warn);}
+  /* --- AMS --- */
+  .symgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .sym{
+    padding:16px 8px; border-radius:14px; border:2px solid var(--border);
+    background:var(--card); font-size:.95rem; font-weight:700; cursor:pointer;
+    color:var(--text); text-align:center; min-height:64px;
+  }
+  .sym.on{background:var(--warnbg); border-color:var(--warn); color:var(--warn);}
+  /* --- schedule --- */
+  table{width:100%; border-collapse:collapse; font-size:.92rem;}
+  td,th{padding:9px 6px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top;}
+  th{color:var(--sub); font-size:.78rem; font-weight:700;}
+  td.t{white-space:nowrap; font-weight:700; font-variant-numeric:tabular-nums;}
+  input[type="time"]{
+    font-size:1.15rem; padding:8px 10px; border-radius:10px;
+    border:1.5px solid var(--border); background:var(--card); color:var(--text);
+  }
+  .log td{font-size:.88rem;}
+  .pill{
+    display:inline-block; padding:2px 8px; border-radius:99px; font-size:.7rem;
+    background:var(--accent2); color:var(--accent); margin-left:6px;
+  }
+  /* --- 写真 --- */
+  .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:6px;}
+  .pcell{position:relative;}
+  .pcell img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block;}
+  .ptime{
+    position:absolute; left:4px; bottom:4px; font-size:.65rem;
+    background:rgba(0,0,0,.55); color:#fff; padding:1px 6px; border-radius:6px;
+  }
+  .pdel{
+    position:absolute; top:4px; right:4px; width:28px; height:28px; border-radius:50%;
+    border:none; background:rgba(0,0,0,.55); color:#fff; font-size:1rem; cursor:pointer;
+  }
+  #pview{
+    display:none; position:fixed; inset:0; z-index:99; background:rgba(0,0,0,.92);
+    align-items:center; justify-content:center; flex-direction:column; gap:10px;
+  }
+  #pview img{max-width:96vw; max-height:82vh; border-radius:12px;}
+  #pview .sub{color:#ddd;}
+</style>
+</head>
+<body>
+<header>
+  <h1>富士登山サポート<small>富士宮ルート・2026年8月</small></h1>
+  <div id="clock">--:--</div>
+  <button id="themeBtn" onclick="toggleTheme()">🌙</button>
+</header>
+
+<main>
+  <div id="globalBanners"></div>
+
+  <!-- 1 準備チェックリスト -->
+  <section class="tab" id="tab-check">
+    <div class="stagebar">
+      <button id="stg-pre" onclick="setStage('pre')">前日チェック</button>
+      <button id="stg-pack" onclick="setStage('pack')">ザック詰めチェック</button>
+    </div>
+    <div class="card">
+      <div class="sub" id="checkProgTxt"></div>
+      <div class="prog"><i id="checkProg"></i></div>
+    </div>
+    <div class="card">
+      <h2>🎒 ザックの詰め方（28-35L）</h2>
+      <svg viewBox="0 0 360 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+        <!-- ザック本体 -->
+        <rect x="70" y="18" width="220" height="368" rx="26" fill="none" stroke="var(--sub)" stroke-width="3"/>
+        <!-- 雨蓋 -->
+        <rect x="82" y="28" width="196" height="58" rx="12" fill="var(--caubg)"/>
+        <text x="180" y="50" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--cau)">雨蓋・ポケット：すぐ出す物</text>
+        <text x="180" y="72" text-anchor="middle" font-size="12" fill="var(--text)">入山証・ライト・薬・行動食ジェル</text>
+        <!-- 上部 -->
+        <rect x="82" y="92" width="196" height="66" rx="12" fill="var(--accent2)"/>
+        <text x="180" y="118" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--accent)">上部：使う頻度が高い物</text>
+        <text x="180" y="140" text-anchor="middle" font-size="12" fill="var(--text)">レインウェア・フェイスカバー・手袋</text>
+        <!-- 中部(左=背中側 重い / 右=外側) -->
+        <rect x="82" y="164" width="100" height="120" rx="12" fill="var(--warnbg)"/>
+        <text x="132" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--warn)">背中側：</text>
+        <text x="132" y="214" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--warn)">重い物</text>
+        <text x="132" y="240" text-anchor="middle" font-size="12" fill="var(--text)">水 1.5〜2L</text>
+        <text x="132" y="258" text-anchor="middle" font-size="12" fill="var(--text)">予備バッテリー</text>
+        <rect x="188" y="164" width="90" height="120" rx="12" fill="var(--okbg)"/>
+        <text x="233" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--ok)">外側：</text>
+        <text x="233" y="214" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--ok)">中くらい</text>
+        <text x="233" y="240" text-anchor="middle" font-size="12" fill="var(--text)">フリース</text>
+        <text x="233" y="258" text-anchor="middle" font-size="12" fill="var(--text)">防寒着</text>
+        <!-- 下部 -->
+        <rect x="82" y="290" width="196" height="88" rx="12" fill="var(--bg)" stroke="var(--border)"/>
+        <text x="180" y="322" text-anchor="middle" font-size="14" font-weight="bold" fill="var(--sub)">下部：軽くて出さない物</text>
+        <text x="180" y="344" text-anchor="middle" font-size="12" fill="var(--text)">替えのエアリズム・Tシャツ・靴下</text>
+        <text x="180" y="362" text-anchor="middle" font-size="12" fill="var(--text)">（山小屋・下山後まで使わない物）</text>
+        <!-- 背中側の矢印 -->
+        <text x="34" y="200" text-anchor="middle" font-size="26">🧍</text>
+        <text x="34" y="228" text-anchor="middle" font-size="11" fill="var(--sub)">背中</text>
+        <path d="M48 220 L66 220" stroke="var(--sub)" stroke-width="2.5" marker-end="none"/>
+        <path d="M60 214 L68 220 L60 226" fill="none" stroke="var(--sub)" stroke-width="2.5"/>
+        <!-- サイドポケット -->
+        <rect x="296" y="176" width="52" height="96" rx="10" fill="var(--accent2)" stroke="var(--border)"/>
+        <text x="322" y="204" text-anchor="middle" font-size="11" font-weight="bold" fill="var(--accent)">サイド</text>
+        <text x="322" y="222" text-anchor="middle" font-size="11" fill="var(--text)">飲み物</text>
+        <text x="322" y="240" text-anchor="middle" font-size="11" fill="var(--text)">酸素缶</text>
+        <text x="322" y="258" text-anchor="middle" font-size="11" fill="var(--text)">ゴミ袋</text>
+      </svg>
+      <p class="sub" style="margin:10px 0 0">コツ：<b>重い物（水）は背中に近く・肩甲骨の高さ</b>に入れると体感が軽くなる。軽い物は下、すぐ使う物は上と雨蓋へ。濡れ物対策に中身はジップロックや袋で小分けに。パッキング後は背負って前後に揺れないか確認。</p>
+    </div>
+    <div id="checkArea"></div>
+    <div class="card">
+      <h2>📋 やることリスト（事前手続き）</h2>
+      <p class="sub">静岡県側は事前手続きが必須です。前日までに完了を。</p>
+      <ul class="check" id="todoArea"></ul>
+    </div>
+    <button class="toolbtn ghost" onclick="resetChecklist()">チェックリストをリセット</button>
+  </section>
+
+  <!-- 2 トラッカー -->
+  <section class="tab" id="tab-track">
+    <div id="trackBanners"></div>
+    <div class="card">
+      <div class="bigstat">
+        <div><b id="stNext">--</b><span id="stNextLab">次の地点まで</span></div>
+        <div><b id="stSummit">--:--</b><span id="stSummitLab">山頂到着予想</span></div>
+        <div><b id="stPace">--</b><span>ペース(対標準)</span></div>
+      </div>
+      <div class="sub" style="margin-top:8px" id="stHint"></div>
+    </div>
+    <div class="card">
+      <h2>🕐 予定時刻の設定 <span class="pill">各合目 休憩10分込み</span></h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <label style="flex:1; min-width:130px"><span class="sub">五合目 出発</span><br>
+          <input type="time" style="width:100%" id="planD5" onchange="setPlan('d5',this.value)"></label>
+        <label style="flex:1; min-width:130px"><span class="sub">山小屋 出発</span><br>
+          <input type="time" style="width:100%" id="planHut" onchange="setPlan('hut',this.value)"></label>
+        <label style="flex:1; min-width:130px"><span class="sub">山頂 下山開始</span><br>
+          <input type="time" style="width:100%" id="planDown" onchange="setPlan('down',this.value)"></label>
+      </div>
+      <p class="sub" style="margin:8px 0 0">各チェックポイントに予定到着時刻と、実際との差（早い/遅れ）を表示します。</p>
+    </div>
+    <div class="card" id="acclimCard" style="display:none">
+      <h2>⏱ 高度順応タイマー</h2>
+      <div id="acclimBody"></div>
+    </div>
+    <div class="card">
+      <h2>⛰ チェックポイント</h2>
+      <p class="sub">到着したら左のボタンをタップ（通過時刻を自動記録）。もう一度タップで取消。</p>
+      <div id="cpArea"></div>
+    </div>
+    <button class="toolbtn" style="background:var(--caubg);color:var(--cau);border:1.5px solid var(--cau)" id="abortBtn" onclick="toggleAbort()">⚠️ 途中下山モード（悪天候・体調不良時）</button>
+    <button class="toolbtn ghost" onclick="resetTrack()">トラッカーをリセット</button>
+  </section>
+
+  <!-- 3 高山病 -->
+  <section class="tab" id="tab-ams">
+    <div class="card">
+      <h2>🩺 高山病セルフチェック</h2>
+      <p class="sub">今ある症状をタップ（再タップで解除）。記録は自動保存されます。</p>
+      <div class="symgrid" id="symGrid"></div>
+      <div id="amsWarn" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2>基本の対処</h2>
+      <p style="font-size:.92rem; line-height:1.7; margin:6px 0">
+        ① 立ち止まって深呼吸・水分補給　② 30分休んで様子を見る　③ 改善しなければ<b>それ以上登らない</b>　④ 悪化するなら<b>下山が唯一の確実な治療</b>。ツアー添乗員・山小屋スタッフに早めに申告を。八合目に衛生センター（夏季診療所）あり。
+      </p>
+    </div>
+    <div class="card">
+      <h2>症状の記録</h2>
+      <div id="amsLog" class="sub">まだ記録はありません</div>
+    </div>
+    <button class="toolbtn ghost" onclick="resetAms()">高山病チェックをリセット</button>
+  </section>
+
+  <!-- 4 見どころ -->
+  <section class="tab" id="tab-spots">
+    <div id="spotsArea"></div>
+  </section>
+
+  <!-- 5 スケジュール -->
+  <section class="tab" id="tab-sched">
+    <div class="card">
+      <h2>🌅 ご来光からの逆算</h2>
+      <label class="sub">ご来光予想時刻（8月上旬は5時前後）</label><br>
+      <input type="time" id="sunriseIn" onchange="setSunrise(this.value)">
+      <div id="revTable" style="margin-top:10px"></div>
+      <p class="sub">※標準コースタイム基準。ご来光前の九合目以上は渋滞しやすいため、混雑期は30分〜1時間早めの出発が安心。</p>
+    </div>
+    <div class="card">
+      <h2>🚌 ツアー行程（1日目）</h2>
+      <table id="sched1"></table>
+    </div>
+    <div class="card">
+      <h2>🏠 山小屋でやること（御来光山荘 15時頃〜23:30頃）</h2>
+      <p class="sub">仮眠前に全部済ませておくと、深夜の出発が楽で速い。</p>
+      <ul class="check" id="hutArea"></ul>
+    </div>
+    <div class="card">
+      <h2>🌄 ツアー行程（2日目）</h2>
+      <table id="sched2"></table>
+      <p class="sub">※宿泊予定：新七合目 御来光山荘。①便と②便は富士宮口五合目で合流となる場合あり。昼食（1日目）は事前申込・事前払い。</p>
+    </div>
+  </section>
+
+  <!-- 6 記録 -->
+  <section class="tab" id="tab-log">
+    <div class="card">
+      <h2>📖 通過ログ</h2>
+      <div id="logArea"></div>
+    </div>
+    <div class="card">
+      <h2>🩺 高山病の記録</h2>
+      <div id="logAms" class="sub"></div>
+    </div>
+    <div class="card">
+      <h2>📷 区間別フォト</h2>
+      <p class="sub">iPhoneの写真アプリから選ぶと、撮影時刻（EXIF）を読み取って通過記録の区間に自動で振り分けます。取り込むのは縮小サムネイルなので容量も安心。<br>※選択画面で「実際のサイズ」を選ぶと撮影時刻が正確に読めます（読めない場合はファイル日時で代用）。</p>
+      <button class="toolbtn" onclick="document.getElementById('photoIn').click()">写真を取り込む（複数選択OK）</button>
+      <input type="file" id="photoIn" accept="image/*" multiple style="display:none" onchange="importPhotos(this.files)">
+      <div id="photoStatus" class="sub" style="margin-top:6px"></div>
+      <div id="photoArea" style="margin-top:8px"></div>
+      <button class="toolbtn ghost" onclick="clearPhotos()">写真をすべて削除</button>
+    </div>
+    <button class="toolbtn" onclick="copyLog()">記録をテキストでコピー</button>
+  </section>
+
+  <div id="pview" onclick="this.style.display='none'">
+    <img id="pviewImg" alt="">
+    <div class="sub" id="pviewCap"></div>
+    <div class="sub">タップで閉じる</div>
+  </div>
+</main>
+
+<nav>
+  <button data-tab="check" onclick="setTab('check')"><span class="ic">🎒</span>準備</button>
+  <button data-tab="track" onclick="setTab('track')"><span class="ic">⛰</span>トラッカー</button>
+  <button data-tab="ams" onclick="setTab('ams')"><span class="ic">🩺</span>高山病</button>
+  <button data-tab="spots" onclick="setTab('spots')"><span class="ic">👀</span>見どころ</button>
+  <button data-tab="sched" onclick="setTab('sched')"><span class="ic">🕐</span>予定</button>
+  <button data-tab="log" onclick="setTab('log')"><span class="ic">📖</span>記録</button>
+</nav>
+
+<script>
+"use strict";
+/* ================= データ ================= */
+// 富士宮ルート標準コースタイム（富士登山オフィシャルサイト/富士宮市の標準値）
+// seg = 前の地点からの標準所要分。登り計330分(5時間30分)、下り計約230分。
+const CPS = [
+  {n:"五合目",       e:2380, seg:0},
+  {n:"六合目",       e:2490, seg:30},
+  {n:"新七合目",     e:2790, seg:60},
+  {n:"元祖七合目",   e:3030, seg:50},
+  {n:"八合目",       e:3220, seg:50},
+  {n:"九合目",       e:3400, seg:50},
+  {n:"九合五勺",     e:3550, seg:40},
+  {n:"山頂",         e:3710, seg:50},
+  // 下山(同じ道を戻る)。下り標準 計約3時間50分
+  {n:"九合五勺（下山）",   e:3550, seg:30, down:true},
+  {n:"九合目（下山）",     e:3400, seg:30, down:true},
+  {n:"八合目（下山）",     e:3220, seg:30, down:true},
+  {n:"元祖七合目（下山）", e:3030, seg:40, down:true},
+  {n:"新七合目（下山）",   e:2790, seg:40, down:true},
+  {n:"六合目（下山）",     e:2490, seg:40, down:true},
+  {n:"五合目 帰着 🎉",     e:2380, seg:20, down:true}
+];
+const SUMMIT = 7, GOAL = 14;
+
+// [タイトル, 見どころ・豆知識, 補給情報(トイレ/飲み物/名物) ※価格は目安]
+const SPOTS = [
+  ["五合目（2,380m）",
+   "4ルート中最も標高が高い登山口で、山頂への最短路。駿河湾と宝永山を見下ろす大展望で、天気が良ければ足元に雲海が広がる。気温は平地より約15℃低いので到着したらまず1枚羽織ること。2022年に焼失した旧レストハウスに代わり、2025年に新しい来訪者施設がオープン。<b>到着後1時間は高度順応</b>してから出発を（順応タイマーはトラッカー画面）。",
+   "🚻 トイレ 約100〜200円（協力金）｜🥤 売店・自販機 水500ml 約300〜400円（山中より安いのでここで買い足すのが得）｜🍽 売店で軽食・お土産。ツアーの昼食もここで<br>💊 <b>アミノバイタル プロ（顆粒4.4g）</b>を出発30分前に水で——登山中の筋疲労・筋肉痛を予防するアミノ酸を先に入れておく"],
+  ["六合目（2,490m）",
+   "雲海荘・宝永山荘の2軒が並ぶ。1707年宝永大噴火の火口（宝永火口）への分岐点で、往復40分ほどで日本最大級の火口を覗ける（時間があれば）。振り返ると駿河湾・伊豆半島・富士宮の街並み。雲海荘の焼印「ここが六合目」は金剛杖派に人気。",
+   "🚻 トイレ 約200円｜🥤 水・スポーツドリンク 約400円｜🍜 名物は<b>富士宮やきそば</b>（約800〜1,000円・宝永山荘）。豚汁・うどんも。標高2,500mで食べるご当地グルメは格別"],
+  ["新七合目（2,790m）",
+   "御来光山荘＝今回の宿泊予定小屋。名前の通り小屋の前からご来光が拝める好立地で、夕方は雲海に沈む夕日、夜は富士宮・駿河湾の夜景と満天の星（晴れれば天の川も）。仮眠前に一度外に出て夜空を見る価値あり。ここでしっかり食べて水分を摂り、仮眠を。",
+   "🚻 トイレ 約200〜300円（宿泊者は無料の場合が多い）｜🥤 飲み物 約400〜500円｜🍛 カレーライス・おでん・豚汁など温かいメニュー。焼印あり<br>💊 深夜の出発直前に<b>アミノバイタル パーフェクトエネルギー（130g）</b>——仮眠明けの空腹でも摂りやすいジェルで、夜間登山4〜5時間分のエネルギーをチャージ<br>🏠 到着したら「予定」タブの<b>山小屋でやることリスト</b>を上から順に"],
+  ["元祖七合目（3,030m）",
+   "山口山荘。ここで標高3,000m超え、気圧は地上の約7割で高山病が出やすくなる高さ。意識してゆっくり歩く。小屋前のベンチからは雲海越しの伊豆半島・駿河湾の大パノラマ。夜明け前はここから上で東の空が焼け始める。",
+   "🚻 トイレ 約300円｜🥤 飲み物 約500円｜🍜 名物は中華だしの<b>富士山盛りうどん</b>。ラーメン・甘酒も。3,000mで飲む温かい汁物は体に染みる"],
+  ["八合目（3,220m）",
+   "池田館。夏季開設の富士山衛生センター（診療所）併設で、体調不良時の相談拠点。ここから上は富士山本宮浅間大社の境内地（鳥居あり）＝神域に入る。晴れた朝は箱根・伊豆・房総半島まで見渡せる展望地。",
+   "🚻 トイレ 約300円｜🥤 飲み物 約500円｜🍜 カップラーメン 約700〜800円、カレーなど。ご来光前の休憩ポイントとして混みやすい<br>💊 疲れを感じたら<b>アミノショット（43g）</b>——歩きながらでも摂れる小型ジェルで中盤のアミノ酸補給"],
+  ["九合目（3,400m）",
+   "万年雪山荘。名の由来は小屋近くに夏でも残る万年雪（探してみて）。富士宮ルート最大級の山小屋。ご来光前は登山者で渋滞しやすい区間に入るので、時間に余裕を持って。",
+   "🚻 トイレ 約300円｜🥤 飲み物 約500円｜🍽 メニュー約30種と富士宮ルート随一の充実度。おすすめは<b>ハンバーグ丼（約1,500円）</b>と<b>カレーライス（約1,000円）</b>"],
+  ["九合五勺（3,550m）",
+   "胸突山荘。最後の急登「胸突八丁」へ——富士登山でいちばん苦しく、いちばん空が近い区間。見上げれば山頂の鳥居、振り返れば雲海とご来光前の空のグラデーション（ブルーアワー）。山頂の混雑を避けてここでご来光を待つのも実は好選択。",
+   "🚻 トイレ 約300円｜🥤 飲み物 約500円｜🍜 山頂前最後の補給拠点。温かい飲み物やカップ麺でエネルギー補給を。ご来光待ちの防寒はここで整える<br>💊 胸突八丁の前に<b>アミノショット パーフェクトエネルギー（45g）</b>——ラストスパートの即効エネルギー"],
+  ["山頂（3,710m）",
+   "富士山本宮浅間大社奥宮と、日本一高い場所にある頂上郵便局（夏季・早朝から）。登頂証明書や限定ポストカードをここから投函できる。日本最高点の剣ヶ峰（3,776m）へは約30分、お鉢巡りは一周約90分で直径約700mの火口（大内院）を一周。ご来光は東側火口縁から。<b>朝は西側に「影富士」</b>——雲海に映る巨大な富士山の影もお見逃しなく。",
+   "🚻 トイレ 約300円｜🥤 飲み物 約500〜600円（日本一高い自販機価格）｜🍛 頂上富士館の<b>富士山頂カレー（約1,200円）</b>が名物。日本最高所の食事処<br>💊 登頂したら<b>アミノバイタル ゴールド（135g）</b>——下山も3〜4時間脚を使うので、リカバリー系ジェルで回復してから下りへ"]
+];
+
+// 詰め場所: 0身につける 1雨蓋 2上部 3背中側 4外側 5サイド 6下部
+const PACKS = [
+  ["🧍 身につける・装備","出発時に着用・装着するもの"],
+  ["🎩 雨蓋・ポケット","すぐ出す物（立ち止まらず取れる）"],
+  ["⬆ 上部","使用頻度が高い物"],
+  ["🎯 背中側（重い物）","肩甲骨の高さ・背中に密着させると軽く感じる"],
+  ["🧥 外側（中くらいの重さ）",""],
+  ["🥤 サイドポケット","歩きながら手が届く"],
+  ["⬇ 下部","軽くて山小屋・下山後まで使わない物"]
+];
+const PACK_SHORT = ["身につける","雨蓋","上部","背中側","外側","サイド","下部"];
+// [名前, メモ, 詰め場所]
+const CHECK_ITEMS = [
+  ["必須（自前）", [
+    ["登山パンツ 着用（TACVASEN・購入済）","撥水ストレッチ。当日朝から着用",0],
+    ["水・スポーツドリンク 1.5〜2L","山小屋でも購入可(400〜500円)。1本はサイドへ",3],
+    ["行動食＋アミノバイタル5点セット（購入済）","飲むタイミングは「見どころ」の各地点参照",1],
+    ["携帯酸素缶 OXY ONE mini（購入済）","高山病対策のお守り。取り出しやすい場所に",5],
+    ["偏光サングラス Lamicall（購入済）","日中の強烈な日差し・照り返し対策",0],
+    ["フェイスカバー ROCKBROS（購入済）","日焼け防止＋下山時の砂埃対策に最適",2],
+    ["現金（小銭多め）","トイレ200〜300円/回・山小屋は現金主体",0],
+    ["QRコード入山証","スマホ保存＋紙で印刷も",1],
+    ["帽子（日差し・防寒）","",0],
+    ["手袋","防寒＋岩場での手保護",2],
+    ["スマホ＋モバイルバッテリー","スマホは身につけ、予備バッテリーは背中側",3],
+    ["健康保険証（コピー可）","",1],
+    ["ゴミ袋","ゴミは全て持ち帰り",5],
+    ["タオル・日焼け止め","紫外線は平地の1.5倍",2]
+  ]],
+  ["レンタル品（やまどうぐレンタル屋）", [
+    ["レインウェア上下","防寒・防風兼用。フリースの上に着られるようワンサイズ大きめ",2],
+    ["ザック 28-35L","ザックカバー内蔵（別途不要）",0],
+    ["登山靴","普段より0.5〜1cm大きめ。登山ソックスのプレゼント付",0],
+    ["ストック","下りの膝の負担軽減。サイドに外付け固定",5],
+    ["ヘッドランプ","⚠️ 付属の替え単4電池3本も必ず一緒に持参",1],
+    ["ショートスパッツ","靴への雨・砂の侵入防止",2],
+    ["フリース","寒ければ上からレインウェアを重ねて保温UP",4]
+  ]],
+  ["防寒・その他", [
+    ["エアリズム長袖＋速乾Tシャツ（着用 各1枚）","ベースレイヤーはこの2枚重ねでスタート。綿は不可",0],
+    ["替え：エアリズム長袖 ×1・速乾Tシャツ ×1","山小屋到着後、汗冷えする前に着替える用",6],
+    ["ウルトラライトダウン ×1","山頂ご来光待ちの切り札。フリース＋ダウン＋レインの重ね着で最強",4],
+    ["ニット帽・ネックウォーマー 各1","山頂のご来光待ちは真冬並み(0〜5℃)",4],
+    ["替え靴下 ×2","濡れたら即交換。靴擦れ・冷え防止",6],
+    ["使い捨てカイロ ×3","ご来光待ちにポケット・腰へ",1],
+    ["耳栓・アイマスク 各1","山小屋仮眠用",6],
+    ["常備薬・頭痛薬・胃腸薬 各1シート","",1],
+    ["携帯トイレ ×1〜2","",6],
+    ["ジップロック ×4","スマホ・紙類の防水。着替えの小分けにも",6],
+    ["ウェットティッシュ 1パック","山中は洗面不可",2],
+    ["下山後の着替え 一式","タオル・シャンプー等は入浴施設にあり持参不要。バスに置く荷物でもOK",6]
+  ]]
+];
+const TODOS = [
+  ["静岡県「FUJI NAVI」で事前学習・登録","ルール学習ののち登録。登山前に必須"],
+  ["入山料 4,000円 の支払い","オンライン決済推奨（現地は混雑）"],
+  ["QRコード入山証の取得","スクリーンショット保存＋印刷"],
+  ["水ヶ塚公園駐車場→シャトルバスの確認","マイカー規制期間。時刻・料金を確認"],
+  ["五合目昼食の事前申込・事前払いの確認","ツアー指定"],
+  ["天気予報・ご来光時刻の最終確認","このアプリの「予定」画面に時刻を入力"]
+];
+
+const SCHED1 = [
+  ["6:30","① 東京 連絡バス発"],
+  ["7:00","② 横浜発（新富士駅経由）"],
+  ["7:10","① 新宿発"],
+  ["—","湯らぎの里（着替え）"],
+  ["—","富士山スカイライン（乗換専用シャトルバスの場合あり）"],
+  ["11:15頃","富士宮口五合目 着（準備・昼食※事前申込）／<b>高度順応タイマー開始</b>"],
+  ["12時台〜","各自登山開始（約2〜3時間）"],
+  ["15時頃","新七合目 御来光山荘 着（夕食・仮眠）"]
+];
+const SCHED2 = [
+  ["23:30〜0:00","山小屋発・各自登山（4〜5時間）"],
+  ["5時前後","山頂でご来光 🌅（お鉢巡り）"],
+  ["〜11時","各自下山（約3〜4時間）"],
+  ["11:40","富士宮口五合目 発"],
+  ["—","入浴施設（約100分・入浴＆昼食）"],
+  ["17:00頃","① 新宿着（東京17:30頃）／② 横浜着"]
+];
+
+const SYMPTOMS = ["頭痛","吐き気・食欲不振","めまい・ふらつき","強い倦怠感","動悸・息切れが続く","眠れない・睡眠障害","顔や手のむくみ"];
+
+// 山小屋でやること（御来光山荘）
+const HUT_TIPS = [
+  ["寝床・トイレ・靴置き場を明るいうちに確認","深夜は真っ暗。ザック・靴の場所は写真を撮っておくと迷わない"],
+  ["夜出発セットを枕元に準備","ヘッドライト・手袋・ニット帽・行動食・小銭。ザックの奥から出しておく"],
+  ["電波があるうちに天気とご来光時刻を最終確認","このアプリの「予定」に入力。家族への連絡もここで"],
+  ["スマホを充電（モバイルバッテリー）","山頂での写真・ライト用に満タンに。機内モードで節電"],
+  ["水分をしっかり摂る","寝ている間は高山病が進みやすい。寝る前にもコップ1〜2杯"],
+  ["夕食は腹八分目でしっかり","食べ過ぎは吐き気のもと。温かいうちに"],
+  ["頭痛など違和感があれば寝る前に申告","我慢しない。頭痛薬は早めが効く。仮眠は頭を少し高くすると楽"],
+  ["翌日の服を着たまま（または枕元で）仮眠","出発時の着替えは消灯後は困難。防寒レイヤーを整えてから横になる"],
+  ["耳栓・アイマスクで16時頃から仮眠","眠れなくても目を閉じて横になるだけで回復する"],
+  ["出発前：トイレ→水補給→エネルギージェル→ライト点灯確認","パーフェクトエネルギー130gはこのタイミング。周りは寝ているので静かに"]
+];
+
+/* ================= 状態 ================= */
+const KEY = "fujiTool_v1";
+let S = load();
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s) return s; }catch(e){}
+  return {theme:"light", stage:"pre", tab:"check",
+    check:{}, todos:{},
+    cps:{}, memos:{}, acclim:null, hydraBase:null, hydraDismiss:0,
+    sym:{}, amsLog:[], sunrise:"04:50"};
+}
+if(!S.plan) S.plan={d5:"12:30", hut:"00:00", down:"06:30"};
+// v2移行: 旧「下山(五合目帰着)」(index8) → 新index14へ。下山出発デフォルトも更新
+if(!S.v2){
+  if(S.cps && S.cps[8]!=null){ S.cps[14]=S.cps[8]; delete S.cps[8]; }
+  if(S.memos && S.memos[8]){ S.memos[14]=S.memos[8]; delete S.memos[8]; }
+  if(S.plan.down==="07:00") S.plan.down="06:30";
+  S.v2=true; save();
+}
+// v3移行: チェックをステージ別→共通に（前日チェックの状態を引き継ぎ）
+if(!S.v3){
+  const nc={};
+  Object.keys(S.check||{}).forEach(k=>{
+    if(!S.check[k]) return;
+    const m=k.match(/^pre_(\d+_\d+)$/); if(m){ nc[m[1]]=true; return; }
+    if(/^\d+_\d+$/.test(k)) nc[k]=true;
+  });
+  S.check=nc;
+  if(S.stage!=="pre" && S.stage!=="pack") S.stage="pre";
+  S.v3=true; save();
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+
+/* ================= 共通 ================= */
+const $ = id => document.getElementById(id);
+function fmt(t){ const d=new Date(t); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function fmtMin(m){ m=Math.round(m); const h=Math.floor(m/60); return h>0 ? h+"時間"+(m%60>0?(m%60)+"分":"") : m+"分"; }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+function setTab(t){
+  S.tab=t; save();
+  document.querySelectorAll("section.tab").forEach(s=>s.classList.toggle("on", s.id==="tab-"+t));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.tab===t));
+  window.scrollTo(0,0);
+}
+function toggleTheme(){
+  S.theme = S.theme==="dark" ? "light" : "dark"; save(); applyTheme();
+}
+function applyTheme(){
+  document.documentElement.dataset.theme = S.theme;
+  $("themeBtn").textContent = S.theme==="dark" ? "☀️" : "🌙";
+}
+
+/* ================= 1 チェックリスト ================= */
+function setStage(st){ S.stage=st; save(); renderCheck(); }
+function itemKey(ci,ii){ return ci+"_"+ii; }
+function toggleItem(ci,ii){ const k=itemKey(ci,ii); S.check[k]=!S.check[k]; save(); renderCheck(); }
+function toggleTodo(i){ S.todos[i]=!S.todos[i]; save(); renderCheck(); }
+function resetChecklist(){
+  if(confirm("チェックリスト（持ち物・やること）を全てリセットしますか？")){
+    S.check={}; S.todos={}; save(); renderCheck();
+  }
+}
+function itemLi(ci,ii,showPack){
+  const it = CHECK_ITEMS[ci][1][ii];
+  const on = !!S.check[itemKey(ci,ii)];
+  const tag = showPack ? '<span class="pill">📍'+PACK_SHORT[it[2]]+'</span>' : '';
+  return '<li class="'+(on?"done":"")+'" onclick="toggleItem('+ci+','+ii+')">'
+    + '<span class="cb">'+(on?"✓":"")+'</span>'
+    + '<span class="lab">'+it[0]+tag+(it[1]?'<small>'+it[1]+'</small>':'')+'</span></li>';
+}
+function renderCheck(){
+  $("stg-pre").classList.toggle("on", S.stage==="pre");
+  $("stg-pack").classList.toggle("on", S.stage==="pack");
+  // 進捗は全アイテム共通（両ビュー連動）
+  let total=0, done=0;
+  CHECK_ITEMS.forEach((cat,ci)=>cat[1].forEach((it,ii)=>{
+    total++; if(S.check[itemKey(ci,ii)]) done++;
+  }));
+  let html="";
+  if(S.stage==="pre"){
+    // カテゴリ別ビュー
+    CHECK_ITEMS.forEach((cat,ci)=>{
+      html += '<div class="card"><h2>'+(ci===0?"✅ ":ci===1?"🏷 ":"🧥 ")+cat[0]+'</h2><ul class="check">';
+      cat[1].forEach((it,ii)=>{ html += itemLi(ci,ii,true); });
+      html += "</ul></div>";
+    });
+  }else{
+    // ザック詰め場所別ビュー（チェック状態は前日チェックと共通）
+    PACKS.forEach((p,pi)=>{
+      let items="";
+      CHECK_ITEMS.forEach((cat,ci)=>cat[1].forEach((it,ii)=>{
+        if(it[2]===pi) items += itemLi(ci,ii,false);
+      }));
+      if(items){
+        html += '<div class="card"><h2>'+p[0]+'</h2>'
+          + (p[1]?'<p class="sub" style="margin:0 0 4px">'+p[1]+'</p>':'')
+          + '<ul class="check">'+items+'</ul></div>';
+      }
+    });
+  }
+  $("checkArea").innerHTML = html;
+  $("checkProg").style.width = total? (done/total*100)+"%" : "0";
+  $("checkProgTxt").textContent = "持ち物チェック（両タブ共通）： "+done+" / "+total;
+
+  let th="";
+  TODOS.forEach((t,i)=>{
+    const on=!!S.todos[i];
+    th += '<li class="'+(on?"done":"")+'" onclick="toggleTodo('+i+')">'
+      + '<span class="cb">'+(on?"✓":"")+'</span>'
+      + '<span class="lab">'+t[0]+(t[1]?'<small>'+t[1]+'</small>':'')+'</span></li>';
+  });
+  $("todoArea").innerHTML = th;
+}
+
+/* ================= 2 トラッカー ================= */
+const REST = 10; // 各合目の休憩想定(分)
+function cumStd(i){ let s=0; for(let k=1;k<=i;k++) s+=CPS[k].seg; return s; }
+function tf(mm){ mm=((mm%1440)+1440)%1440; return String(Math.floor(mm/60)).padStart(2,"0")+":"+String(mm%60).padStart(2,"0"); }
+function setPlan(k,v){ if(v){ S.plan[k]=v; save(); renderTrack(); } }
+// 予定到着時刻(分/日内)。五合目のみ「出発予定」。休憩10分込み。
+function planTimes(){
+  const tm=s=>{const p=s.split(":"); return (+p[0])*60+(+p[1]);};
+  const a=[];
+  a[0]=tm(S.plan.d5);                    // 五合目 出発
+  a[1]=a[0]+CPS[1].seg;                  // 六合目 着
+  a[2]=a[1]+REST+CPS[2].seg;             // 新七合目 着(泊)
+  a[3]=tm(S.plan.hut)+CPS[3].seg;        // 元祖七合目 着
+  for(let i=4;i<=SUMMIT;i++) a[i]=a[i-1]+REST+CPS[i].seg;
+  a[8]=tm(S.plan.down)+CPS[8].seg;       // 下山開始→九合五勺
+  for(let i=9;i<=GOAL;i++) a[i]=a[i-1]+REST+CPS[i].seg;
+  return a;
+}
+function planDiff(i,plan){
+  if(S.cps[i]==null) return null;
+  const d=new Date(S.cps[i]);
+  let df=d.getHours()*60+d.getMinutes()-((plan[i]%1440)+1440)%1440;
+  if(df>720) df-=1440; if(df<-720) df+=1440;
+  return df;
+}
+
+function paceFactor(){
+  // チェック済みの連続区間から 実績/標準 を算出（登り区間のみ）
+  let std=0, act=0;
+  for(let i=1;i<=SUMMIT;i++){
+    if(S.cps[i]!=null && S.cps[i-1]!=null){
+      std += CPS[i].seg;
+      act += (S.cps[i]-S.cps[i-1])/60000;
+    }
+  }
+  if(std===0) return null;
+  return Math.min(2.5, Math.max(0.4, act/std));
+}
+function lastChecked(){
+  let li=-1; CPS.forEach((c,i)=>{ if(S.cps[i]!=null) li=i; }); return li;
+}
+function toggleCp(i){
+  if(S.cps[i]!=null){
+    if(!confirm(CPS[i].n+" の記録（"+fmt(S.cps[i])+"）を取り消しますか？")) return;
+    delete S.cps[i];
+  }else{
+    S.cps[i]=Date.now();
+    if(S.hydraBase==null){ S.hydraBase=Date.now(); }
+  }
+  save(); renderTrack(); renderPhotos();
+}
+function editCp(i){
+  const cur = fmt(S.cps[i]);
+  const v = prompt(CPS[i].n+" の通過時刻を修正 (HH:MM)", cur);
+  if(!v) return;
+  const m = v.match(/^(\d{1,2}):(\d{2})$/);
+  if(!m){ alert("HH:MM 形式で入力してください"); return; }
+  const d = new Date(S.cps[i]);
+  d.setHours(+m[1], +m[2], 0, 0);
+  S.cps[i]=d.getTime(); save(); renderTrack(); renderPhotos();
+}
+function setMemo(i,v){ S.memos[i]=v; save(); }
+function startAcclim(){ S.acclim=Date.now(); save(); renderTrack(); }
+function stopAcclim(){ S.acclim=null; save(); renderTrack(); }
+function dismissHydra(){
+  if(S.hydraBase==null) return;
+  S.hydraDismiss = Math.floor((Date.now()-S.hydraBase)/3600000);
+  save(); renderTrack();
+}
+function resetTrack(){
+  if(confirm("通過記録・メモ・タイマー・途中下山モードを全てリセットしますか？")){
+    S.cps={}; S.memos={}; S.acclim=null; S.hydraBase=null; S.hydraDismiss=0; S.abort=null;
+    save(); renderTrack();
+  }
+}
+function toggleAbort(){
+  if(S.abort){
+    if(confirm("途中下山モードを解除しますか？（スキップした地点が元に戻ります）")){
+      S.abort=null; save(); renderTrack(); renderLog();
+    }
+    return;
+  }
+  const li=lastChecked();
+  if(li<1){ alert("まだ五合目です。登山開始前なら、そのままツアーの指示に従って帰路へ。"); return; }
+  if(li>=SUMMIT){ alert("山頂チェック済みです。そのまま通常の下山チェックポイントをご利用ください。"); return; }
+  if(confirm(CPS[li].n+"（現在地）から下山を開始しますか？\n\n・"+CPS[li].n+"より上の地点はスキップ表示になります\n・帰着予想はここから下りで再計算されます\n・必ず添乗員に下山を伝えてください")){
+    S.abort={from:li, t:Date.now()};
+    save(); renderTrack(); renderLog();
+  }
+}
+function renderTrack(){
+  const now=Date.now(), pf=paceFactor();
+  const f = pf!=null ? pf : 1;
+  const plan = planTimes();
+  $("planD5").value=S.plan.d5; $("planHut").value=S.plan.hut; $("planDown").value=S.plan.down;
+
+  // --- 途中下山モード: スキップ地点の決定 ---
+  // 例) 八合目(idx4)から下山 → 登り5〜7とその標高までの下山地点をスキップし、
+  //     元祖七合目(下山)以降が有効ルートになる（下山segの連続性は保たれる）
+  const skip = new Set();
+  if(S.abort){
+    for(let i=S.abort.from+1;i<=SUMMIT;i++) skip.add(i);
+    for(let d=8;d<=14-S.abort.from;d++) skip.add(d);
+  }
+  const ACT = CPS.map((c,i)=>i).filter(i=>!skip.has(i)); // 有効ルート
+  let liPos=-1; ACT.forEach((idx,p)=>{ if(S.cps[idx]!=null) liPos=p; });
+  const li = liPos>=0 ? ACT[liPos] : -1;
+  const nextIdx = (liPos>=0 && liPos+1<ACT.length) ? ACT[liPos+1] : (liPos<0 ? 0 : null);
+
+  // --- 到着予想(ETA)計算: 休憩10分/合目込み・実績ペース補正(下りは標準) ---
+  const etas={};
+  if(liPos>=0 && liPos+1<ACT.length){
+    // 途中下山の起点では「下山開始を決めた時刻」をベースにする
+    const base0 = (S.abort && li===S.abort.from) ? Math.max(S.cps[li], S.abort.t) : S.cps[li];
+    const calc = base => {
+      let acc=0;
+      for(let p=liPos+1;p<ACT.length;p++){
+        const j=ACT[p];
+        acc += CPS[j].seg*(CPS[j].down?1:f) + (p>liPos+1?REST:0);
+        etas[j] = base + acc*60000;
+      }
+    };
+    calc(base0);
+    // 予想が現在時刻より過去(山小屋滞在・長時間休憩など)→「今出発」ベースに置き直し
+    if(etas[ACT[liPos+1]] < now) calc(now);
+  }
+
+  // --- チェックポイント一覧 ---
+  let html="";
+  CPS.forEach((c,i)=>{
+    if(i===8) html += '<div style="text-align:center;color:var(--sub);font-weight:700;padding:12px 0 4px;border-top:2px dashed var(--border);margin-top:8px">⬇ 下山（同じ道を戻ります）</div>';
+    if(skip.has(i)){
+      html += '<div class="cp" style="opacity:.4"><button class="cpbtn" disabled>—</button>'
+        + '<div class="cpmain"><div class="cpname">'+c.n+'<small>'+c.e.toLocaleString()+'m・スキップ（途中下山）</small></div></div></div>';
+      return;
+    }
+    const done = S.cps[i]!=null;
+    const isNext = !done && i===nextIdx;
+    let seginfo="";
+    if(i>0) seginfo = (c.down?"下り標準 ":"標準 ")+fmtMin(c.seg)+(i<=SUMMIT&&i>0?"／累計 "+fmtMin(cumStd(i)):"");
+    // 予定時刻と差分
+    let planHtml = '<div class="cpinfo">'+(i===0?"出発予定 ":"予定 ")+"<b>"+tf(plan[i])+"</b>";
+    if(done && i>0){
+      const df = planDiff(i,plan);
+      if(df!==null){
+        planHtml += df===0 ? '　<span style="color:var(--ok)">予定どおり</span>'
+          : (df<0 ? '　<span style="color:var(--ok)">'+(-df)+'分早い</span>'
+                  : '　<span style="color:var(--cau)">'+df+'分遅れ</span>');
+      }
+    }else if(!done && etas[i]!=null){
+      planHtml += '　<span style="color:var(--accent);font-weight:700">到着予想 '+fmt(etas[i])+'</span>';
+    }
+    planHtml += '</div>';
+    let timeHtml="";
+    if(done){
+      let dur="";
+      if(i>0 && S.cps[i-1]!=null) dur = "（区間 "+fmtMin((S.cps[i]-S.cps[i-1])/60000)+"）";
+      timeHtml = '<div class="cptime">'+fmt(S.cps[i])+' 通過 '+dur
+        +'<button class="edit" onclick="event.stopPropagation();editCp('+i+')">時刻修正</button></div>';
+    }
+    let extra="";
+    if(i===0 && done && S.acclim==null){
+      extra = '<button class="toolbtn" style="margin-top:8px;padding:11px" onclick="startAcclim()">⏱ 高度順応タイマー（1時間）を開始</button>';
+    }
+    html += '<div class="cp '+(done?"done":"")+(isNext?" next":"")+'">'
+      + '<button class="cpbtn" onclick="toggleCp('+i+')">'+(done?"✓":(c.down?"⬇":"⛰"))+'</button>'
+      + '<div class="cpmain"><div class="cpname">'+c.n+'<small>'+c.e.toLocaleString()+'m</small></div>'
+      + (seginfo?'<div class="cpinfo">'+seginfo+'</div>':'')
+      + planHtml
+      + timeHtml + extra
+      + '<input class="memo" placeholder="メモ（混雑・体調など）" value="'+esc(S.memos[i]||"")+'" onchange="setMemo('+i+',this.value)">'
+      + '</div></div>';
+  });
+  $("cpArea").innerHTML = html;
+
+  // --- 統計 ---
+  if(liPos>=0 && liPos+1<ACT.length){
+    const rem = Math.round((etas[nextIdx]-now)/60000);
+    $("stNext").textContent = rem>0 ? "約"+rem+"分" : "まもなく";
+    $("stNextLab").textContent = CPS[nextIdx].n+"まで";
+  }else{
+    $("stNext").textContent="--";
+    $("stNextLab").textContent = li<0 ? "五合目でスタート" : "全地点通過";
+  }
+  const showGoal = S.abort || li>=SUMMIT; // 下山中は帰着予想を表示
+  $("stSummitLab").textContent = showGoal ? "五合目帰着予想" : "山頂到着予想";
+  if(showGoal){
+    $("stSummit").textContent = S.cps[GOAL]!=null ? fmt(S.cps[GOAL]) : (etas[GOAL]!=null ? fmt(etas[GOAL]) : "--:--");
+  }else{
+    $("stSummit").textContent = (li>=0 && etas[SUMMIT]!=null) ? fmt(etas[SUMMIT]) : "--:--";
+  }
+  $("stPace").textContent = pf!=null ? Math.round(pf*100)+"%" : "--";
+  $("stHint").textContent = pf==null ? "2地点以上をチェックすると、あなたのペースで到着予想を補正します。"
+    : (pf<1 ? "標準より速いペースです。" : "標準よりゆっくりのペースです。焦らずに。");
+
+  // --- 順応タイマー ---
+  const ac=$("acclimCard");
+  if(S.acclim!=null){
+    ac.style.display="block";
+    const remMs = S.acclim+3600000-now;
+    if(remMs>0){
+      const mm=Math.floor(remMs/60000), ss=Math.floor(remMs%60000/1000);
+      $("acclimBody").innerHTML = '<div class="banner ok" style="margin:0">🫁 順応中… 残り <b style="font-size:1.3em">'
+        + mm+"分"+String(ss).padStart(2,"0")+'秒</b><button onclick="stopAcclim()">終了</button></div>'
+        + '<p class="sub" style="margin:8px 0 0">五合目でゆっくり過ごし、体を薄い空気に慣らしましょう。深呼吸・水分補給を。</p>';
+    }else{
+      $("acclimBody").innerHTML = '<div class="banner ok" style="margin:0">✅ 順応時間（1時間）終了！ 出発OK<button onclick="stopAcclim()">閉じる</button></div>';
+    }
+  }else{ ac.style.display="none"; }
+
+  // --- 途中下山ボタンの表示 ---
+  $("abortBtn").textContent = S.abort ? "途中下山モードを解除" : "⚠️ 途中下山モード（悪天候・体調不良時）";
+
+  // --- バナー（途中下山・ペース警告・水分） ---
+  let banners="";
+  if(S.abort){
+    banners += '<div class="banner cau">⬇ 途中下山モード中：'+CPS[S.abort.from].n+'（'+fmt(S.abort.t)+'）から下山。上のチェックポイントはスキップされます。無理せず安全第一で。</div>';
+  }
+  // ご来光との連携: 新七合目以降、山頂到着予想と「ご来光30分前」目標を比較
+  if(!S.abort && li>=2 && li<SUMMIT && etas[SUMMIT]!=null){
+    const sm=S.sunrise.split(":");
+    const sr=(+sm[0])*60+(+sm[1]);
+    const target=((sr-30)%1440+1440)%1440;          // 目標: ご来光30分前に山頂
+    const ed=new Date(etas[SUMMIT]);
+    const etaMod=ed.getHours()*60+ed.getMinutes();
+    let margin=target-etaMod;
+    if(margin>720)margin-=1440; if(margin<-720)margin+=1440;
+    const info='<br><span style="font-weight:normal;font-size:.8rem">山頂予想 '+fmt(etas[SUMMIT])+'／目標 '+tf(target)+'（ご来光'+S.sunrise+'の30分前）</span>';
+    if(margin>=30){
+      banners += '<div class="banner ok">🌅 ご来光に間に合う見込み：余裕 約'+margin+'分'+info+'</div>';
+    }else if(margin>=0){
+      banners += '<div class="banner cau">🌅 ご来光にぎりぎり間に合う見込み（余裕 約'+margin+'分）。休憩は短めに。'+info+'</div>';
+    }else{
+      banners += '<div class="banner warn">🌅 このペースだとご来光に約'+(-margin)+'分遅れの見込み。休憩短縮・早め出発で調整を（急なペースアップは高山病注意）。間に合わなければ九合五勺付近から見るのも好選択。'+info+'</div>';
+    }
+  }
+  if(!S.abort && pf!=null && pf<0.75 && li<SUMMIT && li>=1){
+    banners += '<div class="banner warn">⚠️ ペースが標準より大幅に速い（'+Math.round(pf*100)+'%）。高山病リスク大。意識してゆっくり歩き、休憩を増やして。</div>';
+  }
+  if(S.hydraBase!=null){
+    const hrs = Math.floor((now-S.hydraBase)/3600000);
+    if(hrs>=1 && hrs>S.hydraDismiss){
+      banners += '<div class="banner cau">💧 水分補給の時間です（目安 500ml/時）。行動食も少し食べましょう。<button onclick="dismissHydra()">飲んだ</button></div>';
+    }
+  }
+  $("trackBanners").innerHTML = banners;
+
+  const activeSym = SYMPTOMS.filter((s,i)=>S.sym[i]).length;
+  $("globalBanners").innerHTML = activeSym>=2
+    ? '<div class="banner warn" onclick="setTab(\'ams\')">🚨 高山病の症状が'+activeSym+'つ出ています。休憩・下山を検討（タップで詳細）</div>' : "";
+}
+
+/* ================= 3 高山病 ================= */
+function resetAms(){
+  if(confirm("高山病の症状チェックと記録を全てリセットしますか？")){
+    S.sym={}; S.amsLog=[];
+    save(); renderAms(); renderTrack(); renderLog();
+  }
+}
+function toggleSym(i){
+  S.sym[i]=!S.sym[i];
+  S.amsLog.push({t:Date.now(), s:SYMPTOMS[i], on:S.sym[i]});
+  save(); renderAms(); renderTrack(); renderLog();
+}
+function renderAms(){
+  $("symGrid").innerHTML = SYMPTOMS.map((s,i)=>
+    '<button class="sym '+(S.sym[i]?"on":"")+'" onclick="toggleSym('+i+')">'+s+(S.sym[i]?" ✓":"")+'</button>'
+  ).join("");
+  const n = SYMPTOMS.filter((s,i)=>S.sym[i]).length;
+  let w="";
+  if(n>=2){
+    w = '<div class="banner warn" style="margin:0">🚨 症状が'+n+'つ。<b>その場で休憩・水分補給し、これ以上登らないで。</b>30分休んで改善しなければ下山を検討。添乗員・山小屋に必ず申告を。下山する場合はトラッカーの「⚠️途中下山モード」ボタンを。</div>';
+  }else if(n===1){
+    w = '<div class="banner cau" style="margin:0">⚠️ 症状が1つ出ています。ペースを落とし、深呼吸と水分補給を。悪化したら登行中止。</div>';
+  }else{
+    w = '<div class="banner ok" style="margin:0">✅ 現在チェック中の症状はありません。</div>';
+  }
+  $("amsWarn").innerHTML = w;
+  $("amsLog").innerHTML = S.amsLog.length===0 ? "まだ記録はありません"
+    : S.amsLog.slice(-15).reverse().map(l=>fmt(l.t)+"　"+l.s+"　"+(l.on?"発生":"解消")).join("<br>");
+}
+
+/* ================= 4 見どころ ================= */
+function renderSpots(){
+  // 通過チェック済みの地点だけ表示（新しい順）
+  const passed = SPOTS.map((s,i)=>i).filter(i=>S.cps[i]!=null);
+  let html="";
+  if(passed.length===0){
+    html = '<div class="card"><h2>👀 見どころ・豆知識</h2>'
+      + '<p style="font-size:.93rem;line-height:1.7;margin:4px 0 0">まだ通過記録がありません。<br>トラッカーで合目をチェックすると、その地点の見どころがここに表示されていきます。お楽しみに！</p></div>';
+  }else{
+    html = passed.slice().reverse().map(i=>{
+      const s=SPOTS[i];
+      return '<div class="card"><h2>'+s[0]+'<span class="pill">'+fmt(S.cps[i])+' 通過</span></h2>'
+        + '<p style="font-size:.93rem;line-height:1.7;margin:4px 0 0">'+s[1]+'</p>'
+        + '<div style="background:var(--accent2);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.86rem;line-height:1.7">'+s[2]+'</div></div>';
+    }).join("");
+    html += '<div class="card"><p class="sub" style="margin:0">※価格は目安です（年・小屋により変動）。山小屋は現金払いが基本、小銭の用意を。</p></div>';
+    const remain = SPOTS.length - passed.length;
+    if(remain>0){
+      html += '<div class="card"><p class="sub" style="margin:0">🔒 残り'+remain+'地点。通過チェックすると見どころが解放されます。</p></div>';
+    }
+  }
+  $("spotsArea").innerHTML = html;
+}
+
+/* ================= 5 スケジュール ================= */
+function setSunrise(v){ if(v){ S.sunrise=v; save(); renderSched(); } }
+function toggleHut(i){ if(!S.hut) S.hut={}; S.hut[i]=!S.hut[i]; save(); renderHut(); }
+function renderHut(){
+  if(!S.hut) S.hut={};
+  $("hutArea").innerHTML = HUT_TIPS.map((t,i)=>{
+    const on=!!S.hut[i];
+    return '<li class="'+(on?"done":"")+'" onclick="toggleHut('+i+')">'
+      + '<span class="cb">'+(on?"✓":"")+'</span>'
+      + '<span class="lab">'+t[0]+(t[1]?'<small>'+t[1]+'</small>':'')+'</span></li>';
+  }).join("");
+}
+function renderSched(){
+  $("sunriseIn").value = S.sunrise;
+  const m = S.sunrise.split(":");
+  const sr = (+m[0])*60 + (+m[1]);           // ご来光(分)
+  const target = sr - 30;                     // 30分前に山頂着
+  const tf = mm => { mm=((mm%1440)+1440)%1440; return String(Math.floor(mm/60)).padStart(2,"0")+":"+String(mm%60).padStart(2,"0"); };
+  let rows = '<tr><th>地点</th><th>出発目安</th></tr>';
+  rows += '<tr><td>山頂 到着目標</td><td class="t">'+tf(target)+'（ご来光30分前）</td></tr>';
+  for(let i=SUMMIT-1;i>=2;i--){ // 新七合目〜九合五勺
+    const dep = target - (cumStd(SUMMIT)-cumStd(i));
+    rows += '<tr><td>'+CPS[i].n+'</td><td class="t">'+tf(dep)+' までに出発</td></tr>';
+  }
+  $("revTable").innerHTML = '<table>'+rows+'</table>';
+  $("sched1").innerHTML = '<tr><th>時刻</th><th>内容</th></tr>'+SCHED1.map(r=>'<tr><td class="t">'+r[0]+'</td><td>'+r[1]+'</td></tr>').join("");
+  $("sched2").innerHTML = '<tr><th>時刻</th><th>内容</th></tr>'+SCHED2.map(r=>'<tr><td class="t">'+r[0]+'</td><td>'+r[1]+'</td></tr>').join("");
+}
+
+/* ================= 6 記録 ================= */
+function renderLog(){
+  const rows = [];
+  let any=false;
+  CPS.forEach((c,i)=>{
+    if(S.cps[i]==null && !(S.memos[i]||"")) return;
+    any=true;
+    let dur="--", diff="";
+    if(i>0 && S.cps[i]!=null && S.cps[i-1]!=null){
+      const a=(S.cps[i]-S.cps[i-1])/60000;
+      dur=fmtMin(a);
+      const d=Math.round(a-c.seg);
+      diff = d===0?"±0":(d>0?"+"+d+"分":d+"分");
+    }
+    rows.push('<tr><td><b>'+c.n+'</b></td><td class="t">'+(S.cps[i]!=null?fmt(S.cps[i]):"--")+'</td><td>'+dur+(diff?'<br><span class="sub">対標準 '+diff+'</span>':'')+'</td><td>'+esc(S.memos[i]||"")+'</td></tr>');
+  });
+  let total="";
+  if(S.abort){
+    total += '<p style="color:var(--cau);font-weight:700">⬇ '+fmt(S.abort.t)+' '+CPS[S.abort.from].n+'から途中下山</p>';
+  }
+  if(S.cps[0]!=null && S.cps[SUMMIT]!=null){
+    total = '<p><b>登り所要： '+fmtMin((S.cps[SUMMIT]-S.cps[0])/60000)+'</b>（標準 5時間30分）</p>';
+  }
+  if(S.cps[SUMMIT]!=null && S.cps[GOAL]!=null){
+    total += '<p><b>下り所要： '+fmtMin((S.cps[GOAL]-S.cps[SUMMIT])/60000)+'</b>（標準 約3時間50分）</p>';
+  }
+  $("logArea").innerHTML = !any ? '<p class="sub">まだ記録はありません。トラッカーでチェックすると自動でここに表示されます。</p>'
+    : total+'<table class="log"><tr><th>地点</th><th>時刻</th><th>区間所要</th><th>メモ</th></tr>'+rows.join("")+'</table>';
+  $("logAms").innerHTML = S.amsLog.length===0 ? "記録なし"
+    : S.amsLog.map(l=>fmt(l.t)+"　"+l.s+"　"+(l.on?"発生":"解消")).join("<br>");
+}
+function copyLog(){
+  let txt="【富士登山記録（富士宮ルート）】\n";
+  CPS.forEach((c,i)=>{
+    if(S.cps[i]==null) return;
+    let dur = (i>0 && S.cps[i-1]!=null) ? "（区間"+fmtMin((S.cps[i]-S.cps[i-1])/60000)+"）" : "";
+    txt += fmt(S.cps[i])+" "+c.n+" "+dur+(S.memos[i]?" メモ:"+S.memos[i]:"")+"\n";
+  });
+  if(S.abort) txt += fmt(S.abort.t)+" "+CPS[S.abort.from].n+"から途中下山\n";
+  if(S.amsLog.length){ txt += "\n【体調記録】\n"+S.amsLog.map(l=>fmt(l.t)+" "+l.s+"("+(l.on?"発生":"解消")+")").join("\n"); }
+  const ta=document.createElement("textarea");
+  ta.value=txt; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); alert("コピーしました"); }
+  catch(e){ prompt("以下を長押しコピーしてください", txt); }
+  document.body.removeChild(ta);
+}
+
+/* ================= 写真（区間別フォト） ================= */
+let PH = []; // {id, t, thumb}
+let dbP = null;
+function pdb(){
+  if(!dbP){
+    dbP = new Promise((res,rej)=>{
+      const r = indexedDB.open("fujiPhotos",1);
+      r.onupgradeneeded = e => e.target.result.createObjectStore("p",{keyPath:"id",autoIncrement:true});
+      r.onsuccess = e => res(e.target.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  return dbP;
+}
+function pAll(){ return pdb().then(db=>new Promise((res,rej)=>{
+  const rq = db.transaction("p").objectStore("p").getAll();
+  rq.onsuccess = ()=>res(rq.result||[]); rq.onerror = ()=>rej(rq.error);
+})); }
+function pAdd(rec){ return pdb().then(db=>new Promise((res,rej)=>{
+  const rq = db.transaction("p","readwrite").objectStore("p").add(rec);
+  rq.onsuccess = ()=>res(); rq.onerror = ()=>rej(rq.error);
+})); }
+function pDel(id){ return pdb().then(db=>new Promise((res,rej)=>{
+  const rq = db.transaction("p","readwrite").objectStore("p").delete(id);
+  rq.onsuccess = ()=>res(); rq.onerror = ()=>rej(rq.error);
+})); }
+function pClear(){ return pdb().then(db=>new Promise((res,rej)=>{
+  const rq = db.transaction("p","readwrite").objectStore("p").clear();
+  rq.onsuccess = ()=>res(); rq.onerror = ()=>rej(rq.error);
+})); }
+
+// JPEGのEXIFから撮影日時(DateTimeOriginal)を取得。失敗時はnull
+function exifTime(buf){
+  try{
+    const v = new DataView(buf);
+    if(v.getUint16(0)!==0xFFD8) return null; // JPEG以外(HEIC等)
+    let o = 2;
+    while(o+4 < v.byteLength){
+      if(v.getUint8(o)!==0xFF) break;
+      const marker = v.getUint8(o+1), size = v.getUint16(o+2);
+      if(marker===0xE1 && v.getUint32(o+4)===0x45786966){ // APP1 "Exif"
+        const t = o+10; // TIFFヘッダ
+        const little = v.getUint16(t)===0x4949;
+        const g16 = x=>v.getUint16(x,little), g32 = x=>v.getUint32(x,little);
+        const findTag = (dir,tag)=>{
+          const n = g16(dir);
+          for(let i=0;i<n;i++){ const e=dir+2+i*12; if(g16(e)===tag) return e; }
+          return null;
+        };
+        const readStr = de=>{
+          const off = t+g32(de+8); let s="";
+          for(let i=0;i<19;i++) s += String.fromCharCode(v.getUint8(off+i));
+          return s;
+        };
+        const ifd0 = t+g32(t+4);
+        let dt = null;
+        const ep = findTag(ifd0,0x8769);           // Exif IFDへ
+        if(ep){
+          const de = findTag(t+g32(ep+8),0x9003);  // DateTimeOriginal
+          if(de) dt = readStr(de);
+        }
+        if(!dt){ const de = findTag(ifd0,0x0132); if(de) dt = readStr(de); }
+        if(dt){
+          const m = dt.match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+          if(m) return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();
+        }
+        return null;
+      }
+      o += 2+size;
+    }
+  }catch(e){}
+  return null;
+}
+function makeThumb(f){
+  return new Promise((res,rej)=>{
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = ()=>{
+      const M=480, r=Math.min(1, M/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");
+      c.width=Math.max(1,Math.round(img.width*r)); c.height=Math.max(1,Math.round(img.height*r));
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg",0.72));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error("decode")); };
+    img.src = url;
+  });
+}
+async function importPhotos(files){
+  if(!files || !files.length) return;
+  $("photoStatus").textContent = "取り込み中…";
+  let ok=0, ng=0;
+  for(const f of files){
+    try{
+      const buf = await f.arrayBuffer();
+      const t = exifTime(buf) ?? f.lastModified;
+      const thumb = await makeThumb(f);
+      await pAdd({t:t, thumb:thumb});
+      ok++;
+    }catch(e){ ng++; }
+  }
+  try{ PH = await pAll(); }catch(e){}
+  $("photoStatus").textContent = ok+"枚 取り込みました"+(ng?"（"+ng+"枚 失敗）":"");
+  $("photoIn").value = "";
+  renderPhotos();
+}
+// 撮影時刻→どの区間かを通過記録から判定
+function segLabel(t){
+  const pts = Object.keys(S.cps).map(Number).sort((a,b)=>S.cps[a]-S.cps[b]);
+  if(pts.length===0) return "未分類（通過記録なし）";
+  if(t < S.cps[pts[0]]) return CPS[pts[0]].n+" 到着前";
+  for(let k=0;k<pts.length;k++){
+    const nxt = pts[k+1];
+    if(nxt==null || t < S.cps[nxt])
+      return CPS[pts[k]].n + (nxt!=null ? " → "+CPS[nxt].n : " 以降");
+  }
+}
+function fmtDT(t){ const d=new Date(t); return (d.getMonth()+1)+"/"+d.getDate()+" "+fmt(t); }
+function renderPhotos(){
+  const area = $("photoArea"); if(!area) return;
+  if(!PH.length){ area.innerHTML = '<p class="sub">まだ写真はありません。</p>'; return; }
+  const groups={}, order=[];
+  PH.slice().sort((a,b)=>a.t-b.t).forEach(p=>{
+    const l = segLabel(p.t);
+    if(!groups[l]){ groups[l]=[]; order.push(l); }
+    groups[l].push(p);
+  });
+  area.innerHTML = order.map(l=>
+    '<h3>📍 '+l+'（'+groups[l].length+'枚）</h3><div class="pgrid">'
+    + groups[l].map(p=>'<div class="pcell">'
+      + '<img src="'+p.thumb+'" onclick="viewPhoto('+p.id+')" alt="">'
+      + '<span class="ptime">'+fmtDT(p.t)+'</span>'
+      + '<button class="pdel" onclick="delPhoto('+p.id+')">×</button></div>').join("")
+    + '</div>'
+  ).join("");
+}
+function viewPhoto(id){
+  const p = PH.find(x=>x.id===id); if(!p) return;
+  $("pviewImg").src = p.thumb;
+  $("pviewCap").textContent = fmtDT(p.t)+"　"+segLabel(p.t);
+  $("pview").style.display = "flex";
+}
+async function delPhoto(id){
+  if(!confirm("この写真を削除しますか？")) return;
+  try{ await pDel(id); PH = await pAll(); }catch(e){}
+  renderPhotos();
+}
+async function clearPhotos(){
+  if(!confirm("取り込んだ写真をすべて削除しますか？（iPhone本体の写真は消えません）")) return;
+  try{ await pClear(); PH=[]; }catch(e){}
+  renderPhotos();
+}
+
+/* ================= 初期化 ================= */
+function tick(){
+  const d=new Date();
+  $("clock").textContent = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  // メモ入力中は再描画しない（入力内容が消えるのを防ぐ）
+  const a=document.activeElement;
+  if(a && (a.classList.contains("memo") || a.tagName==="INPUT")) return;
+  renderTrack(); renderLog(); renderSpots();
+}
+applyTheme();
+setTab(S.tab||"check");
+renderCheck(); renderAms(); renderSched(); renderHut(); tick();
+pAll().then(r=>{ PH=r; renderPhotos(); }).catch(()=>{ $("photoStatus").textContent="この環境では写真保存を利用できません（プライベートブラウズ等）"; });
+setInterval(tick, 5000);
+
+// PWA: Service Worker登録（http/https配信時のみ。ローカルファイルでは何もしない）
+if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+  navigator.serviceWorker.register("sw.js").catch(function(){});
+}
+</script>
+</body>
+</html>
