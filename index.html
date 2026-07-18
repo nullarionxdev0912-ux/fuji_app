@@ -360,6 +360,13 @@
       <button class="toolbtn ghost" onclick="clearPhotos()">写真をすべて削除</button>
     </div>
     <button class="toolbtn" onclick="copyLog()">記録をテキストでコピー</button>
+    <div class="card" style="margin-top:12px">
+      <h2>💾 記録のバックアップ</h2>
+      <p class="sub">全データ（チェックリスト・通過記録・メモ・体調記録・設定）をファイルに保存/復元できます。機種変更や誤リセットの保険に。※写真は含まれません。</p>
+      <button class="toolbtn" onclick="exportData()">記録をファイルに保存</button>
+      <button class="toolbtn" style="background:var(--card);color:var(--accent);border:1.5px solid var(--accent)" onclick="document.getElementById('dataIn').click()">保存した記録を読み込む</button>
+      <input type="file" id="dataIn" accept=".json,application/json" style="display:none" onchange="importData(this.files)">
+    </div>
   </section>
 
   <div id="pview" onclick="this.style.display='none'">
@@ -667,6 +674,26 @@ function planDiff(i,plan){
   if(df>720) df-=1440; if(df<-720) df+=1440;
   return df;
 }
+// tsより後の直近の HH:MM をタイムスタンプで返す
+function timeAfter(ts,hm){
+  const p=hm.split(":");
+  const d=new Date(ts); d.setHours(+p[0],+p[1],0,0);
+  if(d.getTime()<ts) d.setTime(d.getTime()+86400000);
+  return d.getTime();
+}
+// 地点liからの出発予定時刻。五合目/山小屋/山頂は設定時刻、他は到着+休憩10分
+function depOf(li){
+  if(S.cps[li]==null) return null;
+  if(S.abort && li===S.abort.from) return Math.max(S.cps[li], S.abort.t);
+  let t=null;
+  if(li===0) t=timeAfter(S.cps[0], S.plan.d5);
+  else if(li===2) t=timeAfter(S.cps[2], S.plan.hut);
+  else if(li===SUMMIT) t=timeAfter(S.cps[SUMMIT], S.plan.down);
+  else return S.cps[li] + REST*60000;
+  // 設定時刻を既に過ぎて到着した場合は「到着+10分」にフォールバック
+  if(t - S.cps[li] > 12*3600000) t = S.cps[li] + REST*60000;
+  return t;
+}
 
 function paceFactor(){
   // チェック済みの連続区間から 実績/標準 を算出（登り区間のみ）
@@ -753,9 +780,8 @@ function renderTrack(){
 
   // --- 到着予想(ETA)計算: 休憩10分/合目込み・実績ペース補正(下りは標準) ---
   const etas={};
-  if(liPos>=0 && liPos+1<ACT.length){
-    // 途中下山の起点では「下山開始を決めた時刻」をベースにする
-    const base0 = (S.abort && li===S.abort.from) ? Math.max(S.cps[li], S.abort.t) : S.cps[li];
+  const hasNext = liPos>=0 && liPos+1<ACT.length;
+  if(hasNext){
     const calc = base => {
       let acc=0;
       for(let p=liPos+1;p<ACT.length;p++){
@@ -764,7 +790,7 @@ function renderTrack(){
         etas[j] = base + acc*60000;
       }
     };
-    calc(base0);
+    calc(depOf(li)); // 現地点の「出発予定時刻」をベースに計算
     // 予想が現在時刻より過去(山小屋滞在・長時間休憩など)→「今出発」ベースに置き直し
     if(etas[ACT[liPos+1]] < now) calc(now);
   }
@@ -801,6 +827,14 @@ function renderTrack(){
       if(i>0 && S.cps[i-1]!=null) dur = "（区間 "+fmtMin((S.cps[i]-S.cps[i-1])/60000)+"）";
       timeHtml = '<div class="cptime">'+fmt(S.cps[i])+' 通過 '+dur
         +'<button class="edit" onclick="event.stopPropagation();editCp('+i+')">時刻修正</button></div>';
+      // 現在地(最後にチェックした地点)には出発予定を表示
+      if(i===li && hasNext){
+        const dp = depOf(li);
+        const spec = (i===0||i===2||i===SUMMIT) && !(S.abort&&i===S.abort.from) && (dp-S.cps[i]!==REST*60000);
+        timeHtml += '<div class="cptime" style="color:var(--cau)">→ 出発予定 '+fmt(dp)
+          + (spec?'（設定時刻）':'（休憩10分後）')
+          + (now>dp?'　<b>そろそろ出発！</b>':'')+'</div>';
+      }
     }
     let extra="";
     if(i===0 && done && S.acclim==null){
@@ -1024,6 +1058,45 @@ function copyLog(){
   document.body.removeChild(ta);
 }
 
+/* ================= 記録の保存・読み込み ================= */
+function exportData(){
+  const d = new Date();
+  const data = {app:"fuji_tozan", ver:1, saved:d.getTime(), state:S};
+  const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fuji_kiroku_"+d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"_"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+".json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  alert("記録ファイルを書き出しました。\niPhoneでは共有シートから「\"ファイル\"に保存」を選んでください。");
+}
+function importData(files){
+  const f = files && files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    try{
+      const data = JSON.parse(rd.result);
+      const st = (data && data.app==="fuji_tozan" && data.state) ? data.state : (data && data.cps ? data : null);
+      if(!st) throw new Error("bad format");
+      const when = data.saved ? new Date(data.saved).toLocaleString("ja-JP") : "不明";
+      if(!confirm("保存した記録（保存日時: "+when+"）を読み込みますか？\n現在のチェック・記録はすべて上書きされます。")){ $("dataIn").value=""; return; }
+      S = st;
+      if(!S.plan) S.plan={d5:"12:30", hut:"00:00", down:"06:30"};
+      if(!S.cps) S.cps={}; if(!S.memos) S.memos={}; if(!S.check) S.check={};
+      if(!S.sym) S.sym={}; if(!S.amsLog) S.amsLog=[]; if(!S.todos) S.todos={};
+      S.v2=true; S.v3=true;
+      save();
+      applyTheme(); setTab(S.tab||"log");
+      renderCheck(); renderAms(); renderSched(); renderHut(); renderTrack(); renderLog(); renderSpots(); renderPhotos();
+      alert("読み込みました");
+    }catch(e){
+      alert("読み込めませんでした。このアプリで保存した .json ファイルか確認してください。");
+    }
+    $("dataIn").value="";
+  };
+  rd.readAsText(f);
+}
+
 /* ================= 写真（区間別フォト） ================= */
 let PH = []; // {id, t, thumb}
 let dbP = null;
@@ -1193,7 +1266,7 @@ renderCheck(); renderAms(); renderSched(); renderHut(); tick();
 pAll().then(r=>{ PH=r; renderPhotos(); }).catch(()=>{ $("photoStatus").textContent="この環境では写真保存を利用できません（プライベートブラウズ等）"; });
 setInterval(tick, 5000);
 
-// PWA: Service Worker登録（http/https配信時のみ。ローカルファイルでは何もしない）
+// PWA: Service Worker登録（http/https配信時のみ）
 if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
   navigator.serviceWorker.register("sw.js").catch(function(){});
 }
